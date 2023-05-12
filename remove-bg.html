@@ -65,7 +65,7 @@
     <div class="img-conatiner">
         <img src="https://i.imgur.com/ICpFqRm.png" alt="" id="img" height="300">
         <div class="overlay hidden">
-            <img src="loading.gif" alt="" class="loading">
+            <img src="/assets/loading.gif" alt="" class="loading">
         </div>
 
     </div>
@@ -138,7 +138,7 @@
                 method: 'POST',
                 body: formData,
                 headers: {
-                    "x-api-key": "f7bac9417ed5ba9a4e6de3ba0862c0deab124ce7"
+                    "x-api-key": "9ff55be42b976d43ff237c76918b19f4182aac24"
                 }
             };
 
@@ -151,28 +151,46 @@
             //upload to server
             const uformData = new FormData();
             uformData.append('file', blob);
-            const noptions = {
+            uformData.append('creativeid', 152);
+            
+            // const uploadURL = 'http://127.0.0.1:5500'
+            const uploadURL = 'https://studio.adctv.com'            
+            
+            var res = {}, assetId, imgURL;
+            res = await fetch(`${uploadURL}/api/v1/asset`, {
                 method: 'POST',
-                body: uformData,
-            };
-            const nurl = 'https://adctv-backend.herokuapp.com'
-            // const nurl = 'http://localhost:9999'
+                body: uformData
+            })
+            
+            if(res.status == 200){
+                res = await res.json();
 
-            const nresponse = await fetch(`${nurl}/v1/upload`, noptions);
-            const njson = await nresponse.json()
-            gobject.src = njson.url
-            gobject.styles = {
-                ...gobject.styles, ...{
-                    "fill": "rgba(51, 0, 255, 1)",
-                    "opacity": 1,
-                    "stroke": "rgba(255, 0, 83, 1)",
-                    "strokeWidth": "10px",
-                    "strokeStyle": "solid",
-                    "visibility": 1
+                assetId = res?.data?.assetId;
+                imgURL = res?.data?.url;
+                    
+                while(!imgURL || imgURL == ""){
+                    res = await fetch(`${uploadURL}/api/v1/asset-cdn-url/` + assetId)
+
+                    if(res.status == 200){
+                        res = await res.json();
+                        imgURL = res?.data?.url;
+                        gobject.src = imgURL
+
+                        gobject.styles = {
+                            ...gobject.styles, ...{
+                                "fill": "rgba(51, 0, 255, 1)",
+                                "opacity": 1,
+                                "stroke": "rgba(255, 0, 83, 1)",
+                                "strokeWidth": "10px",
+                                "strokeStyle": "solid",
+                                "visibility": 1
+                            }
+                        }
+                    }
+                    // gobject.attributes.src = gobject.src
+                    overlay.classList.toggle('hidden')
                 }
             }
-            // gobject.attributes.src = gobject.src
-            overlay.classList.toggle('hidden')
         }
     </script>
 </body>
