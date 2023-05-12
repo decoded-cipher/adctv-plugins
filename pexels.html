@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Image Search</title>
+  <link rel="stylesheet" href="https://unpkg.com/buefy/dist/buefy.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14"></script>
+  <script src="https://unpkg.com/buefy/dist/buefy.min.js"></script>
+
+  <style>
+    * {
+      font-family: sans-serif;
+      margin: 0;
+      box-sizing: border-box;
+    }
+
+    #controllers {
+      padding: 0 5px;
+      width: 100%;
+    }
+
+    .img_container {
+      position: relative;
+      width: 150px;
+      float: left;
+      margin: 5px;
+    }
+
+    .img_container button {
+      height: 35px;
+      width: 35px;
+      background: #FFF;
+      border: none;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translateY(-50%);
+      transform: translate(-50%, -50%);
+      /* display:none; */
+      opacity: 0;
+      transition: opacity .5s ease-in-out;
+
+    }
+
+    .img_container:hover button {
+      transition: opacity .25s ease-in-out;
+      display: inline;
+      opacity: 1;
+    }
+
+    .gallery {
+      margin-top: 15px;
+      text-align: center;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="controllers">
+    <b-input placeholder="Search for Images" :loading="loading" v-model.lazy="search"></b-input>
+    <div v-if="images.length" class="gallery">
+      <div v-for="image in images" class="img_container">
+        <img :src="image.previewURL" alt="">
+        <button @click="add(image.webformatURL)">+</button>
+      </div>
+
+
+    </div>
+  </div>
+
+
+
+  <script type="text/javascript">
+
+
+    const vm = new Vue({
+      el: "#controllers",
+      data() {
+        return {
+          loading: false,
+          search: '',
+          images: [{
+            "id": 3063284,
+            "pageURL": "https://pixabay.com/photos/rose-flower-petal-floral-noble-3063284/",
+            "type": "photo",
+            "tags": "rose, flower, petal",
+            "previewURL": "https://cdn.pixabay.com/photo/2018/01/05/16/24/rose-3063284_150.jpg",
+            "previewWidth": 150,
+            "previewHeight": 99,
+            "webformatURL": "https://pixabay.com/get/g76249f11262d5964d49ea33202b37a731740b71f2386976ced37c516beee027fa1fb07d714eddedd553a55989cf79413843c4e439503706e0bb45c6f701b3ea4_640.jpg",
+            "webformatWidth": 640,
+            "webformatHeight": 426,
+            "largeImageURL": "https://pixabay.com/get/g6465011072735fbb1fb181b135cec41e4e0eb4ac749e8aab684e996a62c54fee82e28df2e1ada26297db87a0383525397efefca46008c1aae5b78d555483a937_1280.jpg",
+            "imageWidth": 6000,
+            "imageHeight": 4000,
+            "imageSize": 3574625,
+            "views": 928718,
+            "downloads": 598574,
+            "collections": 2589,
+            "likes": 1414,
+            "comments": 304,
+            "user_id": 1564471,
+            "user": "anncapictures",
+            "userImageURL": "https://cdn.pixabay.com/user/2015/11/27/06-58-54-609_250x250.jpg"
+          }]
+        }
+      },
+      methods: {
+        add(url) {
+          window.parent.postMessage({ type: 'adctv-message', data: url, messageType: "add" }, '*')
+        }
+      },
+      watch: {
+        async search(value) {
+          try {
+            this.loading = true
+            const response = await fetch(`https://pixabay.com/api/?key=25017727-f9071561310d5e79fcb4960b4&q=${encodeURIComponent(value)}`)
+            const data = await response.json()
+            this.$set(this, "images", data.hits)
+
+          } catch (e) {
+            console.log(e)
+          } finally {
+            this.loading = false
+          }
+        }
+      }
+    })
+
+  </script>
+</body>
+
+</html>

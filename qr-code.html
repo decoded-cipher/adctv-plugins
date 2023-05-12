@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>QR Code Styling</title>
+    <script type="text/javascript" src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14"></script>
+
+
+    <style>
+        * {
+            font-family: sans-serif;
+            margin: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            margin: 0;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 7.5px;
+        }
+
+        .color {
+            border: none;
+            padding: 0;
+            outline: none;
+            margin: 0;
+            background: #FFF;
+            height: 40px;
+        }
+
+        .color-elm {
+            display: flex;
+            align-items: center;
+        }
+
+        .attach {
+            height: 40px;
+            border: none;
+            padding: 15px;
+        }
+
+        input[type="text"],
+        input[type="button"] {
+            height: 40px;
+            padding-left: 7.5px;
+            border: 1.5px solid #f0f0f0;
+        }
+
+        .canvas {
+            margin-top: 15px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="controllers">
+        <br>
+        <div class="color-elm">
+            <input type="color" class="color" v-model="options.color">
+            <input type="text" placeholder="url" v-model="options.data" />
+            <button class="attach" @click="postData()">Attach</button>
+        </div>
+
+    </div>
+
+    <div id="canvas"></div>
+
+    <img src="" alt="" id="abcd">
+
+
+    <script type="text/javascript">
+
+        let qrCode;
+        const vm = new Vue({
+            el: "#controllers",
+            mounted() {
+                window.addEventListener("message", (e) => {
+                    console.log(e)
+                }, false);
+
+
+            },
+            methods: {
+                async postData() {
+                    console.log("posting")  
+                    let dt = await qrCode.getRawData('png')
+                    window.parent.postMessage({ type: 'adctv-message', data: dt, messageType: "add" }, '*');
+                }
+            },
+            data() {
+                return {
+                    options: {
+                        data: "http://www.google.com",
+                        color: "#4267b2"
+                    }
+                }
+            },
+            watch: {
+                options: {
+                    immediate: true,
+                    deep: true,
+                    handler(val) {
+                        qrCode = new QRCodeStyling({
+                            width: 180,
+                            height: 180,
+                            type: "svg",
+                            data: val.data,
+                            dotsOptions: {
+                                color: val.color,
+                                type: "dots"
+                            },
+                            cornersSquareOptions: {
+                                type: "dot"
+                            },
+                            cornersDotOptions: {
+                                type: "dot"
+                            },
+                            backgroundOptions: {
+                                color: "#ffffff",
+                            },
+                            imageOptions: {
+                                crossOrigin: "anonymous",
+                                margin: 20
+                            }
+                        });
+                        const canvas = document.getElementById("canvas")
+                        canvas.innerHTML = ''
+                        qrCode.append(canvas);
+                    }
+                }
+            }
+        })
+
+    </script>
+</body>
+
+</html>

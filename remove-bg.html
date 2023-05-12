@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css">
+
+    <title>Document</title>
+
+    <style>
+        * {
+            margin: 0;
+            box-sizing: border-box;
+        }
+
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        .img-conatiner {
+            position: relative;
+            height: 250px;
+        }
+
+        .overlay {
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            position: absolute;
+            top: 0;
+        }
+
+        .img-conatiner #img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .loading {
+            width: 50px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .bg {
+            background-image: url("https://i.imgur.com/UxnEntI.jpg");
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- <input type="file" id="file"> -->
+    <a id="btn" role="button" href="#">Remove background</a> <a id="upadteBtn" role="button" href="#">Update Image</a>
+    <div class="img-conatiner">
+        <img src="https://i.imgur.com/ICpFqRm.png" alt="" id="img" height="300">
+        <div class="overlay hidden">
+            <img src="loading.gif" alt="" class="loading">
+        </div>
+
+    </div>
+
+
+    <!-- <iframe src="frame.html" frameborder="0"></iframe> -->
+
+    <script>
+        // const files = document.getElementById("file")
+        const img = document.getElementById("img")
+        const btn = document.getElementById("btn")
+        const upadteBtn = document.getElementById("upadteBtn")
+        const overlay = document.querySelector('.overlay')
+        let gblob = null
+        let gobject = {}
+
+        btn.addEventListener('click', (e) => {
+            e.preventDefault()
+            overlay.classList.toggle('hidden')
+            upload(gblob)
+
+        })
+
+        upadteBtn.addEventListener('click', (e) => {
+            e.preventDefault()
+            window.parent.postMessage({ type: 'adctv-message', data: gobject, messageType: "update" }, '*');
+        })
+
+        window.addEventListener('message', handleMessage)
+
+        function handleMessage(e) {
+            console.log(e)
+            console.log(e.data)
+
+            if (typeof e.data === 'object') {
+
+                if (e.data.type === 'image') {
+
+                    const object = e.data
+                    img.src = object.src
+                    gobject = object
+                    fetch(object.src)
+                        .then(res => res.blob())
+                        .then(blob => {
+                            gblob = blob
+                            const url = URL.createObjectURL(blob)
+                            img.src = url
+                            // upload(blob)
+
+                        })
+                }
+
+            }
+
+        }
+
+
+
+        async function upload(file) {
+            const formData = new FormData();
+            if (!file) {
+                formData.append('image_file', files.files[0]);
+            }
+            else {
+                formData.append('image_file', file)
+            }
+
+
+            const options = {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    "x-api-key": "f7bac9417ed5ba9a4e6de3ba0862c0deab124ce7"
+                }
+            };
+
+            const response = await fetch('https://sdk.photoroom.com/v1/segment', options);
+            const blob = await response.blob()
+            const url = URL.createObjectURL(blob)
+            img.src = url
+            img.classList.add("bg")
+
+            //upload to server
+            const uformData = new FormData();
+            uformData.append('file', blob);
+            const noptions = {
+                method: 'POST',
+                body: uformData,
+            };
+            const nurl = 'https://adctv-backend.herokuapp.com'
+            // const nurl = 'http://localhost:9999'
+
+            const nresponse = await fetch(`${nurl}/v1/upload`, noptions);
+            const njson = await nresponse.json()
+            gobject.src = njson.url
+            gobject.styles = {
+                ...gobject.styles, ...{
+                    "fill": "rgba(51, 0, 255, 1)",
+                    "opacity": 1,
+                    "stroke": "rgba(255, 0, 83, 1)",
+                    "strokeWidth": "10px",
+                    "strokeStyle": "solid",
+                    "visibility": 1
+                }
+            }
+            // gobject.attributes.src = gobject.src
+            overlay.classList.toggle('hidden')
+        }
+    </script>
+</body>
+
+</html>
